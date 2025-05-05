@@ -1,0 +1,17 @@
+# Ignore everything
+*
+
+# But NOT these files (negate the previous rule)
+!.gitignore
+!app.py
+!requirements.txt
+!Dockerfile
+!README.md
+
+# Ignore virtual environment stuff
+.venv\
+Lib/
+Scripts/
+pyvenv.cfg
+__pycache__/
+*.pyc
