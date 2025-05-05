@@ -1,20 +1,33 @@
-# Google Trends API
-This repository provides a FastAPI-based REST API to fetch trending data for any keyword using the Google Trends API via the `pytrends` library.
+# Google Search Console API
+
+This repository provides a FastAPI-based REST API to fetch performance data from Google Search Console using OAuth 2.0.
+
+It returns search queries and related SEO metrics like clicks, impressions, CTR, and position — all for the last 30 days.
+
 ---
+
 ## 📊 Endpoint
-### `GET /trends/keywords?keyword=your_keyword`
-Fetches hourly popularity scores for a given keyword over the past 7 days.
+
+### `GET /search-console/data?site_url=https://yourdomain.com`
+
+Fetches top search queries from Google Search Console for the past 30 days.
+
 #### Response Format:
 ```json
 {
-  "trend": {
-    "2025-03-14T04:00:00": 29,
-    "2025-03-14T05:00:00": 43,
+  "rows": [
+    {
+      "keys": ["example keyword"],
+      "clicks": 100,
+      "impressions": 1200,
+      "ctr": 0.083,
+      "position": 2.5
+    },
     ...
-  }
+  ],
+  "responseAggregationType": "byProperty"
 }
-```
----
+
 ## ✅ Prerequisites
 - Python 3.8+
 - Docker (optional, for containerized deployment)
@@ -86,5 +99,3 @@ uvicorn
 pytrends
 ```
 ---
-## 📄 License
-MIT License
