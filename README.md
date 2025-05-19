@@ -13,7 +13,7 @@ It returns search queries and related SEO metrics like clicks, impressions, CTR,
 Fetches top search queries from Google Search Console for the past 30 days.
 
 #### Response Format:
-```json
+
 {
   "rows": [
     {
@@ -25,77 +25,136 @@ Fetches top search queries from Google Search Console for the past 30 days.
     },
     ...
   ],
-  "responseAggregationType": "byProperty"
+  "responseAggregationType": "byPage"
 }
 
-## ✅ Prerequisites
-- Python 3.8+
-- Docker (optional, for containerized deployment)
-- Internet connection (pytrends fetches live data)
----
-## 🔧 Setup Instructions
 
-### Option 1: Standard Setup
-#### 1. Clone the Repository
-```bash
+###  ✅ Prerequisites
+Python 3.8+
+
+Docker (optional, for containerized deployment)
+
+Internet connection (to fetch live data from Google Search Console)
+
+
+### 🔧 Setup Instructions
+Option 1: Standard Setup
+1. Clone the Repository
+
 git clone https://github.com/yourusername/trends-keywords-api.git
 cd trends-keywords-api
-```
-#### 2. Install Dependencies
-```bash
+
+Install Dependencies
 pip install -r requirements.txt
-```
-#### 3. Run the API
-```bash
-uvicorn app:app --reload
-```
-The API will be available at: [http://127.0.0.1:8000/trends/keywords?keyword=seo](http://127.0.0.1:8000/trends/keywords?keyword=seo)
 
-### Option 2: Docker Setup
-#### 1. Clone the Repository
-```bash
-git clone https://github.com/yourusername/trends-keywords-api.git
-cd trends-keywords-api
-```
-#### 2. Build the Docker Image
-```bash
-docker build -t seo-tracking-app .
-```
-#### 3. Run the Docker Container
-```bash
-docker run -d -p 8000:8000 --name seo-tracker seo-tracking-app
-```
-The API will be available at: [http://localhost:8000/trends/keywords?keyword=seo](http://localhost:8000/trends/keywords?keyword=seo)
+Run the API
+uvicorn main:app --reload
 
-#### 4. Docker Management Commands
-```bash
-# View running containers
-docker ps
 
-# View container logs
-docker logs seo-tracker
+## APIs
+### 1. /authorize
+This endpoint initiates the OAuth2 authorization process by redirecting the user to Google's consent screen.
 
-# Stop the container
-docker stop seo-tracker
+Method: GET
 
-# Restart the container
-docker start seo-tracker
+Description:
 
-# Remove the container
-docker rm seo-tracker
-```
----
-## 🛠️ Testing in Postman
-1. Run your server (either with uvicorn or Docker)
-2. Open Postman:
-   - Method: `GET`
-   - URL: `http://127.0.0.1:8000/trends/keywords?keyword=seo`
-3. You should see a JSON response with time-series trend data.
----
-## 📖 requirements.txt
-```
-fastapi
-uvicorn
-pytrends
-```
----
+When you visit this endpoint, you will be redirected to Google’s OAuth2 consent screen.
+
+The user will be prompted to grant permission for the app to access Google Search Console data on their behalf. Only authorized users with appropriate permissions can use this endpoint to access the Search Console data.
+
+Permissions: The user must have "Owner" or "Full" permissions for the site in Google Search Console to successfully authorize and retrieve data.
+
+After successful authorization, a token is generated that can be used for subsequent API requests.
+
+Example Request:
+GET http://localhost:8000/authorize
+Response: Redirects to Google’s OAuth2 consent screen.
+
+### 2. /oauth2callback
+This endpoint handles the callback from Google's OAuth2 consent screen. After the user grants permission, Google will redirect them here with an authorization code.
+
+Method: GET
+
+Parameters:
+
+code: The authorization code sent by Google.
+
+Description:
+
+The code is exchanged for an access token, which is then saved as token.pkl on the local machine.
+
+This token is used for future API requests to Google Search Console.
+
+Example Request:
+GET http://localhost:8000/oauth2callback?code=authorization_code
+Response: A message indicating whether the authentication was successful or not.
+
+{
+  "message": "Authentication successful. Token saved."
+}
+
+
+### 3./search-console/data
+This endpoint retrieves search analytics data from Google Search Console for a given site URL.
+
+Method: GET
+
+Parameters:
+
+site_url: The URL of the website for which the search analytics data is requested.
+
+Description:
+
+Fetches search analytics data for the past 30 days, with a limit of 50 rows.
+
+Requires successful OAuth2 authentication (i.e., a valid token.pkl file).
+
+The data is aggregated by page for the specified site URL.
+
+Example Request:
+GET http://localhost:8000/search-console/data?site_url=https://theshroomgroove.com
+
+Response: Returns search analytics data for the specified site URL.
+
+Example Response:
+{
+  "rows": [
+    {
+      "keys": ["query"],
+      "clicks": 100,
+      "impressions": 5000,
+      "ctr": 2.0,
+      "position": 10.0
+    },
+    ...
+  ],
+  "responseAggregationType": "byPage"
+}
+### Docker Setup
+This application is also containerized using Docker. You can use Docker to build and run the app in an isolated environment.
+
+Build the Docker Image:
+In the project directory (where the Dockerfile is located), run:
+
+docker build -t seo-optimization .
+
+Run the Docker Container:
+Once the image is built, you can run the container:
+docker run -d -p 8000:8000 seo-optimization
+
+This will run the FastAPI app inside a Docker container and make it accessible at http://localhost:8000.
+
+Access the API:
+Once the Docker container is running, you can access the app at http://localhost:8000. Follow the same steps to authenticate and use the API as described in the API documentation above.
+
+Troubleshooting
+OAuth2 Errors:
+If you encounter any errors during the OAuth2 flow (like invalid_grant or access issues), ensure that your client_secret.json is correctly configured and your app is authorized for development use in the Google Cloud Console.
+
+Ensure that the user has appropriate permissions (Owner or Full access) in Google Search Console for the site.
+
+Docker Issues:
+Ensure Docker is installed and running.
+
+If you encounter issues with Docker, check that the Docker daemon is properly configured to build and run containers.
